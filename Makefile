@@ -1,10 +1,11 @@
 # Relaypoint Makefile
-# Local development Makefile - not used in CI/CD pipelines
+# Local development commands - not used in CI/CD pipelines
 
+# Variables
 BINARY_NAME := relaypoint
 BUILD_DIR := dist
 CMD_DIR := ./cmd/relaypoint
-VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BUILD_TIME := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 LDFLAGS := -s -w -X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME)
 
@@ -17,29 +18,29 @@ GOFMT := gofmt
 GOMOD := $(GOCMD) mod
 GORUN := $(GOCMD) run
 
-# Colors for output
+# Colors for terminal output
 CYAN := \033[0;36m
 GREEN := \033[0;32m
-YELLOW := \033[0;33m
+YELLOW := \033[1;33m
 RED := \033[0;31m
 NC := \033[0m # No Color
 
-.PHONY: all build clean test fmt lint fmt vet run help
+.PHONY: all build clean test lint fmt vet run help
 .PHONY: build-all build-linux build-darwin build-windows
 .PHONY: dev mock-backends integration-test bench
 .PHONY: deps deps-update deps-tidy deps-verify
-.PHONY: install uninstall
+.PHONY: install uninstall tools
 
 # Default target
 all: clean lint test build
 
-# help: Show this help message
+## help: Show this help message
 help:
 	@echo ""
 	@echo "$(CYAN)Relaypoint$(NC) - Development Commands"
 	@echo ""
 	@echo "$(YELLOW)Usage:$(NC)"
-	@echo "	 make $(GREEN)<target>$(NC)"
+	@echo "  make $(GREEN)<target>$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Build:$(NC)"
 	@echo "  $(GREEN)build$(NC)          Build binary for current OS/arch"
@@ -77,85 +78,84 @@ help:
 	@echo "  $(GREEN)deps-update$(NC)    Update all dependencies"
 	@echo "  $(GREEN)deps-tidy$(NC)      Tidy go.mod"
 	@echo "  $(GREEN)deps-verify$(NC)    Verify dependencies"
+	@echo "  $(GREEN)tools$(NC)          Install development tools"
 	@echo ""
 
-# ========================= Build =========================
+# ==================== Build ====================
 
 ## build: Build binary for current OS/arch
 build:
 	@echo "$(CYAN)Building $(BINARY_NAME)...$(NC)"
 	@mkdir -p $(BUILD_DIR)
-	$(GOBUILD) -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)
-	@echo "$(GREEN)✓ Build completed: $(BUILD_DIR)/$(BINARY_NAME)$(NC)"
+	$(GOBUILD) -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)
+	@echo "$(GREEN)✓ Built $(BUILD_DIR)/$(BINARY_NAME)$(NC)"
 
-## build-all: Build binaries for all platforms
+## build-all: Build for all platforms
 build-all: build-linux build-darwin build-windows
-	@echo "$(GREEN)✓ All builds completed$(NC)"
+	@echo "$(GREEN)✓ All builds complete$(NC)"
 	@ls -lh $(BUILD_DIR)/
 
 ## build-linux: Build for Linux
 build-linux:
-	@echo "$(CYAN)Building Linux binaries...$(NC)"
+	@echo "$(CYAN)Building for Linux...$(NC)"
 	@mkdir -p $(BUILD_DIR)
-	GOOS=linux GOARCH=amd64 $(GOBUILD) -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64 $(CMD_DIR)
-	GOOS=linux GOARCH=arm64 $(GOBUILD) -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 $(CMD_DIR)
-	@echo "$(GREEN)✓ Linux builds completed$(NC)"
+	GOOS=linux GOARCH=amd64 $(GOBUILD) -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64 $(CMD_DIR)
+	GOOS=linux GOARCH=arm64 $(GOBUILD) -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 $(CMD_DIR)
+	@echo "$(GREEN)✓ Linux builds complete$(NC)"
 
 ## build-darwin: Build for macOS
 build-darwin:
-	@echo "$(CYAN)Building macOS binaries...$(NC)"
+	@echo "$(CYAN)Building for macOS...$(NC)"
 	@mkdir -p $(BUILD_DIR)
-	GOOS=darwin GOARCH=amd64 $(GOBUILD) -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-amd64 $(CMD_DIR)
-	GOOS=darwin GOARCH=arm64 $(GOBUILD) -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-arm64 $(CMD_DIR)
-	@echo "$(GREEN)✓ macOS builds completed$(NC)"
+	GOOS=darwin GOARCH=amd64 $(GOBUILD) -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-amd64 $(CMD_DIR)
+	GOOS=darwin GOARCH=arm64 $(GOBUILD) -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-arm64 $(CMD_DIR)
+	@echo "$(GREEN)✓ macOS builds complete$(NC)"
 
 ## build-windows: Build for Windows
 build-windows:
-	@echo "$(CYAN)Building Windows binaries...$(NC)"
+	@echo "$(CYAN)Building for Windows...$(NC)"
 	@mkdir -p $(BUILD_DIR)
-	GOOS=windows GOARCH=amd64 $(GOBUILD) -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe $(CMD_DIR)
-	@echo "$(GREEN)✓ Windows builds completed$(NC)"
+	GOOS=windows GOARCH=amd64 $(GOBUILD) -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe $(CMD_DIR)
+	@echo "$(GREEN)✓ Windows build complete$(NC)"
 
 ## install: Install binary to /usr/local/bin
 install: build
-	@echo "$(CYAN)Installing $(BINARY_NAME) to /usr/local/bin...$(NC)"
+	@echo "$(CYAN)Installing to /usr/local/bin...$(NC)"
 	@sudo cp $(BUILD_DIR)/$(BINARY_NAME) /usr/local/bin/$(BINARY_NAME)
 	@sudo chmod +x /usr/local/bin/$(BINARY_NAME)
 	@echo "$(GREEN)✓ Installed to /usr/local/bin/$(BINARY_NAME)$(NC)"
 
 ## uninstall: Remove binary from /usr/local/bin
 uninstall:
-	@echo "$(CYAN)Uninstalling $(BINARY_NAME) from /usr/local/bin...$(NC)"
+	@echo "$(CYAN)Removing from /usr/local/bin...$(NC)"
 	@sudo rm -f /usr/local/bin/$(BINARY_NAME)
-	@echo "$(GREEN)✓ Uninstalled from /usr/local/bin/$(BINARY_NAME)$(NC)"
-
-# ========================= Clean =========================
+	@echo "$(GREEN)✓ Uninstalled$(NC)"
 
 ## clean: Remove build artifacts
 clean:
-	@echo "$(CYAN)Cleaning build artifacts...$(NC)"
+	@echo "$(CYAN)Cleaning...$(NC)"
 	@rm -rf $(BUILD_DIR)
 	@rm -f coverage.out coverage.html
-	@rm -f ${BINARY_NAME} mock_backend
-	@echo "$(GREEN)✓ Clean completed$(NC)"
+	@rm -f $(BINARY_NAME) mock_backend
+	@echo "$(GREEN)✓ Clean$(NC)"
 
 # ==================== Development ====================
 
 ## run: Run relaypoint with default config
 run: build
-	@echo "$(CYAN)Starting $(BINARY_NAME)...$(NC)"
+	@echo "$(CYAN)Starting relaypoint...$(NC)"
 	$(BUILD_DIR)/$(BINARY_NAME) -config relaypoint.yml
 
-## run-config: Run relaypoint with custom config (usage: make run-config CONFIG=path/to/config.yaml)
+## run-config: Run relaypoint with custom config (usage: make run-config CONFIG=path/to/config.yml)
 run-config: build
-	@echo "$(CYAN)Starting $(BINARY_NAME) with config: $(CONFIG)...$(NC)"
+	@echo "$(CYAN)Starting relaypoint with $(CONFIG)...$(NC)"
 	$(BUILD_DIR)/$(BINARY_NAME) -config $(CONFIG)
 
-## dev: Run relaypoint with hot reload (requires air)
+## dev: Run with hot reload (requires: go install github.com/air-verse/air@latest)
 dev:
-	@command -v air >/dev/null 2>&1 || { echo >&2 "$(RED)✗ air is not installed. Please install it first: go install github.com/air-verse/air@latest$(NC)"; exit 1; }
-	@echo "$(CYAN)Starting development server with hot reload...$(NC)"
-	air -c .air.toml 2> /dev/null || air
+	@command -v air >/dev/null 2>&1 || command -v $(GOBIN)/air >/dev/null 2>&1 || { echo "$(RED)Error: air not installed. Run: make tools$(NC)"; exit 1; }
+	@echo "$(CYAN)Starting with hot reload...$(NC)"
+	@PATH="$(GOBIN):$(PATH)" air -c .air.toml 2>/dev/null || PATH="$(GOBIN):$(PATH)" air
 
 ## mock-backends: Start mock backend services
 mock-backends:
@@ -172,21 +172,21 @@ mock-backends:
 
 ## stop-backends: Stop mock backend services
 stop-backends:
-	@echo "$(CYAN)Stopping mock backend services...$(NC)"
+	@echo "$(CYAN)Stopping mock backends...$(NC)"
 	@pkill -f mock_backend 2>/dev/null || true
 	@echo "$(GREEN)✓ Mock backends stopped$(NC)"
 
-## demo: Start full demo environment (mock backends + relaypoint)
+## demo: Start full demo environment (backends + relaypoint)
 demo: build mock-backends
 	@sleep 1
-	@echo "$(CYAN)Starting Relaypoint...$(NC)"
+	@echo "$(CYAN)Starting relaypoint...$(NC)"
 	@$(BUILD_DIR)/$(BINARY_NAME) -config test/test_config.yml &
 	@sleep 2
 	@echo ""
 	@echo "$(GREEN)✓ Demo environment running!$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Endpoints:$(NC)"
-	@echo "  Relaypoint:  http://localhost:8080"
+	@echo "  Gateway:  http://localhost:8080"
 	@echo "  Metrics:  http://localhost:9090/metrics"
 	@echo "  Health:   http://localhost:8080/health"
 	@echo ""
@@ -198,41 +198,41 @@ demo: build mock-backends
 
 ## demo-stop: Stop demo environment
 demo-stop: stop-backends
-	@echo "$(CYAN)Stopping Relaypoint...$(NC)"
+	@echo "$(CYAN)Stopping relaypoint...$(NC)"
 	@pkill -f "$(BINARY_NAME)" 2>/dev/null || true
 	@echo "$(GREEN)✓ Demo stopped$(NC)"
 
-# ========================= Testing =========================
+# ==================== Testing ====================
 
 ## test: Run unit tests
 test:
-	@echo "$(CYAN)Running unit tests...$(NC)"
-	@$(GOTEST) ./...
+	@echo "$(CYAN)Running tests...$(NC)"
+	$(GOTEST) ./...
 	@echo "$(GREEN)✓ Tests passed$(NC)"
 
 ## test-verbose: Run tests with verbose output
 test-verbose:
-	@echo "$(CYAN)Running unit tests (verbose)...$(NC)"
-	@$(GOTEST) -v ./...
+	@echo "$(CYAN)Running tests (verbose)...$(NC)"
+	$(GOTEST) -v ./...
 
 ## test-race: Run tests with race detector
 test-race:
-	@echo "$(CYAN)Running unit tests (race detector)...$(NC)"
-	@$(GOTEST) -race ./...
+	@echo "$(CYAN)Running tests with race detector...$(NC)"
+	$(GOTEST) -race ./...
 	@echo "$(GREEN)✓ No race conditions detected$(NC)"
 
-## test-cover: Run tests with coverage report
+## test-cover: Run tests with coverage
 test-cover:
-	@echo "$(CYAN)Running unit tests with coverage...$(NC)"
-	@$(GOTEST) -coverprofile=coverage.out -covermode=atomic ./...
+	@echo "$(CYAN)Running tests with coverage...$(NC)"
+	$(GOTEST) -coverprofile=coverage.out -covermode=atomic ./...
 	@$(GOCMD) tool cover -func=coverage.out
 	@$(GOCMD) tool cover -html=coverage.out -o coverage.html
-	@echo "$(GREEN)✓ Coverage report generated: coverage.html$(NC)"
+	@echo "$(GREEN)✓ Coverage report: coverage.html$(NC)"
 
-## test-short: Run tests with short flag
+## test-short: Run only short tests
 test-short:
-	@echo "$(CYAN)Running unit tests (short)...$(NC)"
-	@$(GOTEST) -short ./...
+	@echo "$(CYAN)Running short tests...$(NC)"
+	$(GOTEST) -short ./...
 
 ## integration-test: Run integration tests
 integration-test: build
@@ -241,7 +241,7 @@ integration-test: build
 	@./mock_backend -port 3001 -name "backend-1" &
 	@./mock_backend -port 3002 -name "backend-2" &
 	@sleep 1
-	@$(BUILD_DIR)/$(BINARY_NAME) -config test/test_config.yaml &
+	@$(BUILD_DIR)/$(BINARY_NAME) -config test/test_config.yml &
 	@sleep 2
 	@echo "Testing basic routing..."
 	@curl -sf http://localhost:8080/api/v1/users > /dev/null && echo "$(GREEN)✓ Basic routing$(NC)" || echo "$(RED)✗ Basic routing failed$(NC)"
@@ -256,97 +256,115 @@ integration-test: build
 ## bench: Run benchmarks
 bench:
 	@echo "$(CYAN)Running benchmarks...$(NC)"
-	@$(GOTEST) -bench=. -benchmem ./...
+	$(GOTEST) -bench=. -benchmem ./...
 
 ## bench-cpu: Run benchmarks with CPU profiling
 bench-cpu:
-	@echo "$(CYAN)Running benchmarks with CPU profiling...$(NC)"
-	@$(GOTEST) -bench=. -cpuprofile=cpu.prof ./internal/router
+	@echo "$(CYAN)Running benchmarks with CPU profile...$(NC)"
+	$(GOTEST) -bench=. -cpuprofile=cpu.prof ./internal/router
 	@echo "$(GREEN)View with: go tool pprof cpu.prof$(NC)"
 
 ## bench-mem: Run benchmarks with memory profiling
 bench-mem:
-	@echo "$(CYAN)Running benchmarks with memory profiling...$(NC)"
-	@$(GOTEST) -bench=. -memprofile=mem.prof ./internal/router
+	@echo "$(CYAN)Running benchmarks with memory profile...$(NC)"
+	$(GOTEST) -bench=. -memprofile=mem.prof ./internal/router
 	@echo "$(GREEN)View with: go tool pprof mem.prof$(NC)"
 
-# ===================== Code Quality =====================
+# ==================== Code Quality ====================
+
+# Go bin path for installed tools
+GOBIN := $(shell go env GOPATH)/bin
 
 ## lint: Run golangci-lint
 lint:
-	@echo "$(CYAN)Running golangci-lint...$(NC)"
-	@command -v golangci-lint >/dev/null 2>&1 || { echo "$(YELLOW)Installing golangci-lint...$(NC)"; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
-	@golangci-lint run ./...
+	@echo "$(CYAN)Running linter...$(NC)"
+	@command -v golangci-lint >/dev/null 2>&1 || command -v $(GOBIN)/golangci-lint >/dev/null 2>&1 || { echo "$(YELLOW)Installing golangci-lint...$(NC)"; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
+	@PATH="$(GOBIN):$(PATH)" golangci-lint run ./...
 	@echo "$(GREEN)✓ Lint passed$(NC)"
 
-## lint-fix: Run golangci-lint with auto-fix
+## lint-fix: Run linter and fix issues
 lint-fix:
-	@echo "$(CYAN)Running golangci-lint with auto-fix...$(NC)"
-	golangci-lint run --fix ./...
+	@echo "$(CYAN)Running linter with fixes...$(NC)"
+	@command -v golangci-lint >/dev/null 2>&1 || command -v $(GOBIN)/golangci-lint >/dev/null 2>&1 || { echo "$(YELLOW)Installing golangci-lint...$(NC)"; go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; }
+	@PATH="$(GOBIN):$(PATH)" golangci-lint run --fix ./...
 	@echo "$(GREEN)✓ Lint fixes applied$(NC)"
 
-## fmt: Format code with gofmt
+## fmt: Format code
 fmt:
-	@echo "$(CYAN)Formatting code with gofmt...$(NC)"
-	@$(GOFMT) -s -w .
+	@echo "$(CYAN)Formatting code...$(NC)"
+	$(GOFMT) -s -w .
 	@echo "$(GREEN)✓ Code formatted$(NC)"
 
 ## fmt-check: Check if code is formatted
 fmt-check:
-	@echo "$(CYAN)Checking code formatting with gofmt...$(NC)"
+	@echo "$(CYAN)Checking formatting...$(NC)"
 	@test -z "$$($(GOFMT) -l .)" || { echo "$(RED)Code not formatted. Run: make fmt$(NC)"; $(GOFMT) -d .; exit 1; }
-	@echo "$(GREEN)✓ Code is properly formatted$(NC)"
+	@echo "$(GREEN)✓ Code is formatted$(NC)"
 
 ## vet: Run go vet
 vet:
 	@echo "$(CYAN)Running go vet...$(NC)"
-	@$(GOVET) ./...
-	@echo "$(GREEN)✓ go vet passed$(NC)"
+	$(GOVET) ./...
+	@echo "$(GREEN)✓ Vet passed$(NC)"
 
-## check: Run all checks (fmt, vet, lint)
+## check: Run all checks
 check: fmt-check vet lint
 	@echo "$(GREEN)✓ All checks passed$(NC)"
 
 ## security: Run security scan (requires gosec)
 security:
 	@echo "$(CYAN)Running security scan...$(NC)"
-	@command -v gosec >/dev/null 2>&1 || { echo "$(YELLOW)Installing gosec...$(NC)"; go install github.com/securego/gosec/v2/cmd/gosec@latest; }
-	gosec -quiet ./...
+	@command -v gosec >/dev/null 2>&1 || command -v $(GOBIN)/gosec >/dev/null 2>&1 || { echo "$(YELLOW)Installing gosec...$(NC)"; go install github.com/securego/gosec/v2/cmd/gosec@latest; }
+	@PATH="$(GOBIN):$(PATH)" gosec -quiet ./...
 	@echo "$(GREEN)✓ Security scan passed$(NC)"
 
-# ===================== Dependencies =====================
+# ==================== Dependencies ====================
 
 ## deps: Download dependencies
 deps:
 	@echo "$(CYAN)Downloading dependencies...$(NC)"
-	@$(GOMOD) download
+	$(GOMOD) download
 	@echo "$(GREEN)✓ Dependencies downloaded$(NC)"
 
 ## deps-update: Update all dependencies
 deps-update:
 	@echo "$(CYAN)Updating dependencies...$(NC)"
-	@$(GOCMD) get -u ./...
-	@$(GOMOD) tidy
+	$(GOCMD) get -u ./...
+	$(GOMOD) tidy
 	@echo "$(GREEN)✓ Dependencies updated$(NC)"
 
 ## deps-tidy: Tidy go.mod
 deps-tidy:
 	@echo "$(CYAN)Tidying go.mod...$(NC)"
-	@$(GOMOD) tidy
+	$(GOMOD) tidy
 	@echo "$(GREEN)✓ go.mod tidied$(NC)"
 
 ## deps-verify: Verify dependencies
 deps-verify:
 	@echo "$(CYAN)Verifying dependencies...$(NC)"
-	@$(GOMOD) verify
+	$(GOMOD) verify
 	@echo "$(GREEN)✓ Dependencies verified$(NC)"
 
-## deps-graph: Generate dependencies graph
+## deps-graph: Show dependency graph (requires modgraphviz)
 deps-graph:
 	@echo "$(CYAN)Generating dependency graph...$(NC)"
-	@command -v modgraphviz >/dev/null 2>&1 || { echo "$(YELLOW)Installing modgraphviz...$(NC)"; go install github.com/lucasepe/modgraphviz@latest; }
-	$(GOCMD) mod graph | modgraphviz | dot -Tpng -o deps.png
+	@command -v modgraphviz >/dev/null 2>&1 || command -v $(GOBIN)/modgraphviz >/dev/null 2>&1 || { echo "$(YELLOW)Installing modgraphviz...$(NC)"; go install github.com/lucasepe/modgraphviz@latest; }
+	@$(GOCMD) mod graph | PATH="$(GOBIN):$(PATH)" modgraphviz | dot -Tpng -o deps.png
 	@echo "$(GREEN)✓ Dependency graph: deps.png$(NC)"
+
+## tools: Install all development tools
+tools:
+	@echo "$(CYAN)Installing development tools...$(NC)"
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install github.com/securego/gosec/v2/cmd/gosec@latest
+	go install github.com/air-verse/air@latest
+	@echo "$(GREEN)✓ Tools installed to $(GOBIN):$(NC)"
+	@echo "  - golangci-lint (linter)"
+	@echo "  - gosec (security scanner)"
+	@echo "  - air (hot reload)"
+	@echo ""
+	@echo "$(YELLOW)Tip:$(NC) Add this to your shell profile for global access:"
+	@echo "  export PATH=\"\$$PATH:$(GOBIN)\""
 
 # ==================== Release ====================
 
@@ -360,7 +378,7 @@ release-dry:
 	@echo "  - $(BINARY_NAME)-$(VERSION)-darwin-arm64.tar.gz"
 	@echo "  - $(BINARY_NAME)-$(VERSION)-windows-amd64.zip"
 
-## release: Build release binaries and packages
+## release: Create release archives
 release: clean build-all
 	@echo "$(CYAN)Creating release archives...$(NC)"
 	@mkdir -p $(BUILD_DIR)/release

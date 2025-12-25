@@ -79,7 +79,7 @@ func TestRandom_Next(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		target := lb.Next()
 		if target == nil {
-			t.Error("Should return a target")
+			t.Fatal("Should return a target")
 		}
 		seen[target.URL.Host] = true
 	}

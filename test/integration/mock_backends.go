@@ -41,7 +41,7 @@ func startUserService(addr string) {
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"healthy"}`))
+		_, _ = w.Write([]byte(`{"status":"healthy"}`))
 	})
 
 	mux.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +57,7 @@ func startUserService(addr string) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Backend-Server", addr)
 		w.Header().Set("X-Request-Count", fmt.Sprintf("%d", count))
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"users":   users,
 			"server":  addr,
 			"request": count,
@@ -73,7 +73,7 @@ func startUserService(addr string) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Backend-Server", addr)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":      id,
 			"name":    "User " + id,
 			"email":   fmt.Sprintf("user%s@example.com", id),
@@ -94,7 +94,7 @@ func startOrderService(addr string) {
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"healthy"}`))
+		_, _ = w.Write([]byte(`{"status":"healthy"}`))
 	})
 
 	mux.HandleFunc("/orders", func(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +108,7 @@ func startOrderService(addr string) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Backend-Server", addr)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"orders":  orders,
 			"server":  addr,
 			"request": count,
@@ -123,7 +123,7 @@ func startOrderService(addr string) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Backend-Server", addr)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":      id,
 			"total":   99.99,
 			"status":  "shipped",
@@ -144,7 +144,7 @@ func startProductService(addr string) {
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"healthy"}`))
+		_, _ = w.Write([]byte(`{"status":"healthy"}`))
 	})
 
 	mux.HandleFunc("/products", func(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +159,7 @@ func startProductService(addr string) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Backend-Server", addr)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"products": products,
 			"server":   addr,
 			"request":  count,

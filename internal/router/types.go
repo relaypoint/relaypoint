@@ -16,8 +16,7 @@ type Route struct {
 }
 
 type Router struct {
-	routes       []*routeEntry
-	defaultRoute *routeEntry
+	routes []*routeEntry
 }
 
 type routeEntry struct {

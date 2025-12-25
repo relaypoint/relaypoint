@@ -237,7 +237,7 @@ func (p *Proxy) proxyRequest(w http.ResponseWriter, r *http.Request, route *rout
 	removeHopHeaders(w.Header())
 
 	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
+	_, _ = io.Copy(w, resp.Body)
 
 	return resp.StatusCode, nil
 }

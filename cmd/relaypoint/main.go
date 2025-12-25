@@ -63,13 +63,13 @@ func main() {
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"healthy"}`))
+		_, _ = w.Write([]byte(`{"status":"healthy"}`))
 	})
 
 	mux.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
 		stats := p.UsageStats()
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(stats)
+		_ = json.NewEncoder(w).Encode(stats)
 	})
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
@@ -118,7 +118,7 @@ func main() {
 	defer cancel()
 
 	if metricsServer != nil {
-		metricsServer.Shutdown(ctx)
+		_ = metricsServer.Shutdown(ctx)
 	}
 
 	if err := server.Shutdown(ctx); err != nil {

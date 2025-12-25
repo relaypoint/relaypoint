@@ -365,7 +365,7 @@ func (m *Metrics) JSONHandler() http.Handler {
 			"upstream_health":    counterMapToJSON(m.upstreamHealth),
 			"requests_in_flight": counterMapToJSON(m.requestsInFlight),
 		}
-		json.NewEncoder(w).Encode(stats)
+		_ = json.NewEncoder(w).Encode(stats)
 	})
 }
 
