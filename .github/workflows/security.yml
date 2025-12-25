@@ -112,7 +112,7 @@ jobs:
           echo "License check complete. Review any flagged dependencies above."
 
       - name: Upload license report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: license-report
           path: license-report.txt
