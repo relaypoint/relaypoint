@@ -1,6 +1,3 @@
 mkdocs
 mkdocs-shadcn
 mike
-search
-excalidraw
-mkdocstrings

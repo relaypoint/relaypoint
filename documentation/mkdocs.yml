@@ -33,11 +33,6 @@ nav:
   - Troubleshooting: troubleshooting.md
   - Best Practices: best-practices.md
 
-plugins:
-  - search
-  - excalidraw
-  - mkdocstrings
-
 markdown_extensions:
   admonition:
   codehilite:
