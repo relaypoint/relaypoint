@@ -1,0 +1,59 @@
+site_name: "Relaypoint"
+site_description: "A high-performance API Gateway written in Go"
+site_url: https://relaypoint.github.io/relaypoint/
+repo_url: https://github.com/relaypoint/relaypoint
+repo_name: relaypoint/relaypoint
+docs_dir: ./docs
+
+theme:
+  name: shadcn
+  icon: assets/relaypoint.svg
+  pygments_style:
+    light: shadcn-light
+    dark: github-dark
+
+extra:
+  favicon: assets/favicon.ico
+  version:
+    provider: mike
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Installation: installation.md
+  - Configuration: configuration.md
+  - Features:
+      - Routing: features/routing.md
+      - Load Balancing: features/load-balancing.md
+      - Rate Limiting: features/rate-limiting.md
+      - Health Checks: features/health-checks.md
+      - Metrics: features/metrics.md
+      - API Keys: features/api-keys.md
+  - Examples: examples.md
+  - Troubleshooting: troubleshooting.md
+  - Best Practices: best-practices.md
+
+plugins:
+  - search
+  - excalidraw
+  - mkdocstrings
+
+markdown_extensions:
+  admonition:
+  codehilite:
+  fenced_code:
+  footnotes:
+  extra:
+  pymdownx.blocks.details:
+  pymdownx.tabbed:
+  pymdownx.blocks.tab:
+    combine_header_slug: true
+    separator: ___
+  pymdownx.progressbar:
+  pymdownx.snippets:
+  pymdownx.arithmatex:
+    generic: true
+  shadcn.extensions.echarts.alpha:
+  shadcn.extensions.codexec:
+  shadcn.extensions.iconify:
+  pymdownx.blocks.caption:
