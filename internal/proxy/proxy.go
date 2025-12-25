@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -231,7 +232,12 @@ func (p *Proxy) proxyRequest(w http.ResponseWriter, r *http.Request, route *rout
 		http.Error(w, "Bad Gateway", http.StatusBadGateway)
 		return http.StatusBadGateway, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	copyHeaders(w.Header(), resp.Header)
 	removeHopHeaders(w.Header())

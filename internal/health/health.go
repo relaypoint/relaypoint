@@ -2,6 +2,7 @@ package health
 
 import (
 	"context"
+	"log"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -108,7 +109,12 @@ func (c *Checker) checkTarget(target *loadbalancer.Target, cfg *config.HealthChe
 	if err != nil {
 		return false
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	return resp.StatusCode >= 200 && resp.StatusCode < 400
 }
