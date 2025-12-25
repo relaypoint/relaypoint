@@ -1,0 +1,56 @@
+name: Docs
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Install docs dependencies
+        working-directory: documentation
+        run: pip install -r requirements.txt
+
+      - name: Configure Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch gh-pages
+        run: git fetch origin gh-pages:gh-pages || echo "No gh-pages branch yet"
+
+      - name: Release Version Deploy
+        working-directory: documentation
+        if: ${{ github.event.release && github.event.release.tag_name != '' }}
+        run: mike deploy ${{ github.event.release.tag_name }} latest -u --push
+
+      - name: Development Version Deploy
+        working-directory: documentation
+        if: ${{ !github.event.release || github.event.release.tag_name == '' }}
+        run: |
+          VERSION=${GITHUB_SHA::7}
+          PREV_VERSION=$(git rev-parse --short HEAD^)
+          mike deploy $VERSION development -u --push
+          mike delete $PREV_VERSION || true
+
+      - name: Default latest
+        working-directory: documentation
+        run: mike set-default latest --allow-undefined --push
