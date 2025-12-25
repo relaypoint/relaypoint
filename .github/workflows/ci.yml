@@ -142,7 +142,7 @@ jobs:
 
       - name: Start relaypoint
         run: |
-          ./relaypoint -config test/test_config.yaml &
+          ./relaypoint -config test/test_config.yml &
 
           # Wait for relaypoint to be ready
           echo "Waiting for relaypoint..."
