@@ -123,12 +123,51 @@ jobs:
           ./mock_backend -port 3001 -name "backend-1" &
           ./mock_backend -port 3002 -name "backend-2" &
           ./mock_backend -port 3003 -name "backend-3" &
-          sleep 2
+
+          # Wait for backends to be ready
+          echo "Waiting for mock backends..."
+          for port in 3001 3002 3003; do
+            for i in {1..30}; do
+              if curl -sf http://localhost:$port/health > /dev/null 2>&1; then
+                echo "Backend on port $port is ready"
+                break
+              fi
+              if [ $i -eq 30 ]; then
+                echo "Backend on port $port failed to start"
+                exit 1
+              fi
+              sleep 0.5
+            done
+          done
 
       - name: Start relaypoint
         run: |
           ./relaypoint -config test/test_config.yaml &
-          sleep 3
+
+          # Wait for relaypoint to be ready
+          echo "Waiting for relaypoint..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
+              echo "Relaypoint is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Relaypoint failed to start"
+              echo "=== Relaypoint logs ==="
+              cat relaypoint.log 2>/dev/null || echo "No log file"
+              exit 1
+            fi
+            sleep 1
+          done
+
+          # Also wait for metrics endpoint
+          for i in {1..10}; do
+            if curl -sf http://localhost:9090/metrics > /dev/null 2>&1; then
+              echo "Metrics endpoint is ready"
+              break
+            fi
+            sleep 0.5
+          done
 
       - name: Run integration tests
         run: |
@@ -176,3 +215,10 @@ jobs:
 
           echo ""
           echo "All integration tests passed! ✓"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          pkill -f mock_backend || true
+          pkill -f relaypoint || true
+          echo "Cleaned up background processes."
