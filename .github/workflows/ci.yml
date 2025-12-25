@@ -51,6 +51,7 @@ jobs:
           files: ./coverage.out
           flags: unittests
           name: codecov-umbrella
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
       - name: Check test coverage
