@@ -1,0 +1,101 @@
+# Test configuration for real-world testing
+# Run with: ./relaypoint -config test/integration/test_config.yaml
+
+server:
+  port: 8080
+  read_timeout: 30s
+  write_timeout: 30s
+
+metrics:
+  enabled: true
+  port: 9090
+
+upstreams:
+  # User service with load balancing across 2 instances
+  - name: user-service
+    targets:
+      - url: http://localhost:3001
+        weight: 1
+      - url: http://localhost:3002
+        weight: 1
+    load_balance: round_robin
+    health_check:
+      path: /health
+      interval: 5s
+      timeout: 2s
+
+  # Order service - single instance
+  - name: order-service
+    targets:
+      - url: http://localhost:3003
+    load_balance: round_robin
+    health_check:
+      path: /health
+      interval: 5s
+      timeout: 2s
+
+  # Product service - single instance
+  - name: product-service
+    targets:
+      - url: http://localhost:3004
+    load_balance: round_robin
+    health_check:
+      path: /health
+      interval: 5s
+      timeout: 2s
+
+routes:
+  # User routes
+  - name: users-list
+    path: /api/v1/users
+    methods:
+      - GET
+    upstream: user-service
+    rate_limit:
+      enabled: true
+      requests_per_second: 10
+      burst: 20
+
+  - name: users-detail
+    path: /api/v1/users/:id
+    methods:
+      - GET
+    upstream: user-service
+
+  # Order routes
+  - name: orders
+    path: /api/v1/orders/**
+    upstream: order-service
+    rate_limit:
+      enabled: true
+      requests_per_second: 5
+      burst: 10
+
+  # Product routes
+  - name: products
+    path: /api/v1/products/**
+    upstream: product-service
+
+  # Catch-all for /api
+  - name: api-catchall
+    path: /api/**
+    upstream: user-service
+
+# API keys for testing rate limits
+api_keys:
+  - key: "test-key-unlimited"
+    name: "Unlimited Test Key"
+    requests_per_second: 1000
+    enabled: true
+
+  - key: "test-key-limited"
+    name: "Limited Test Key (5/sec)"
+    requests_per_second: 5
+    burst: 10
+    enabled: true
+
+  - key: "test-key-very-limited"
+    name: "Very Limited Key (1/sec)"
+    requests_per_second: 1
+    burst: 2
+    enabled: true

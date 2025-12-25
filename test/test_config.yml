@@ -1,0 +1,64 @@
+# Test Configuration for RelayPoint
+
+server:
+  port: 8080
+  read_timeout: 30s
+  write_timeout: 30s
+
+metrics:
+  enabled: true
+  port: 9090
+
+upstreams:
+  - name: user-service
+    load_balance: round_robin
+    targets:
+      - url: http://localhost:3001
+        weight: 1
+      - url: http://localhost:3002
+        weight: 1
+  - name: order-service
+    load_balance: round_robin
+    targets:
+      - url: http://localhost:3003
+  - name: product-service
+    load_balance: round_robin
+    targets:
+      - url: http://localhost:3004
+
+routes:
+  - name: users-api
+    path: /api/v1/users
+    upstream: user-service
+  - name: users-wildcard
+    path: /api/v1/users/*
+    upstream: user-service
+  - name: orders-api
+    path: /api/v1/orders
+    upstream: order-service
+  - name: orders-wildcard
+    path: /api/v1/orders/*
+    upstream: order-service
+  - name: products-api
+    path: /api/v1/products
+    upstream: product-service
+  - name: products-wildcard
+    path: /api/v1/products/*
+    upstream: product-service
+
+api_keys:
+  - key: test-key-123
+    name: test-app
+    enabled: true
+    requests_per_second: 100
+    burst_size: 150
+  - key: limited-key
+    name: limited-app
+    enabled: true
+    requests_per_second: 10
+    burst_size: 10
+
+rate_limit:
+  enabled: true
+  default_rps: 50
+  default_burst: 100

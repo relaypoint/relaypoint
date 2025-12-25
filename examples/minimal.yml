@@ -1,0 +1,100 @@
+# Test configuration for Relaypoint
+# This routes to mock backend services
+
+server:
+  port: 8080
+  read_timeout: 30s
+  write_timeout: 30s
+
+metrics:
+  enabled: true
+  port: 9090
+
+upstreams:
+  - name: user-service
+    targets:
+      - url: http://localhost:3001
+        weight: 1
+    load_balance: round_robin
+    health_check:
+      enabled: true
+      path: /health
+      interval: 10s
+      timeout: 2s
+
+  - name: order-service
+    targets:
+      - url: http://localhost:3002
+        weight: 1
+    load_balance: round_robin
+    health_check:
+      enabled: true
+      path: /health
+      interval: 10s
+
+  - name: product-service
+    targets:
+      - url: http://localhost:3003
+        weight: 1
+    load_balance: round_robin
+
+routes:
+  # User service routes
+  - name: users-api
+    path: /api/v1/users
+    upstream: user-service
+    methods:
+      - GET
+      - POST
+    rate_limit:
+      enabled: true
+      requests_per_second: 10
+      burst: 20
+
+  - name: users-api-wildcard
+    path: /api/v1/users/*
+    upstream: user-service
+    rate_limit:
+      enabled: true
+      requests_per_second: 10
+
+  # Order service routes
+  - name: orders-api
+    path: /api/v1/orders
+    upstream: order-service
+    methods:
+      - GET
+      - POST
+
+  - name: orders-api-wildcard
+    path: /api/v1/orders/*
+    upstream: order-service
+
+  # Product service routes
+  - name: products-api
+    path: /api/v1/products/**
+    upstream: product-service
+
+  # Catch-all for /api
+  - name: api-catchall
+    path: /api/**
+    upstream: user-service
+
+# API keys for rate limiting
+api_keys:
+  - key: "test-key-123"
+    name: "test-app"
+    requests_per_second: 100
+    burst: 200
+    enabled: true
+
+  - key: "limited-key"
+    name: "limited-app"
+    requests_per_second: 2
+    burst: 5
+    enabled: true
+
+rate_limit:
+  enabled: true
+  default_requests_per_second: 50
+  default_burst: 100
