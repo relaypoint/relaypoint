@@ -126,61 +126,61 @@ func (m *Metrics) writePrometheusMetrics(w http.ResponseWriter) {
 	defer m.mu.RUnlock()
 
 	// Write request counters
-	fmt.Fprintln(w, "# HELP gateway_requests_total Total number of requests processed")
-	fmt.Fprintln(w, "# TYPE gateway_requests_total counter")
+	_, _ = fmt.Fprintln(w, "# HELP gateway_requests_total Total number of requests processed")
+	_, _ = fmt.Fprintln(w, "# TYPE gateway_requests_total counter")
 	for key, counter := range m.requestsTotal {
-		fmt.Fprintf(w, "gateway_requests_total{key=\"%s\"} %d\n", key, counter.Load())
+		_, _ = fmt.Fprintf(w, "gateway_requests_total{key=\"%s\"} %d\n", key, counter.Load())
 	}
 
 	// Write error counters
-	fmt.Fprintln(w, "# HELP gateway_errors_total Total number of errors")
-	fmt.Fprintln(w, "# TYPE gateway_errors_total counter")
+	_, _ = fmt.Fprintln(w, "# HELP gateway_errors_total Total number of errors")
+	_, _ = fmt.Fprintln(w, "# TYPE gateway_errors_total counter")
 	for key, counter := range m.errorsTotal {
-		fmt.Fprintf(w, "gateway_errors_total{key=\"%s\"} %d\n", key, counter.Load())
+		_, _ = fmt.Fprintf(w, "gateway_errors_total{key=\"%s\"} %d\n", key, counter.Load())
 	}
 
 	// Write rate limit counters
-	fmt.Fprintln(w, "# HELP gateway_rate_limit_hits_total Total number of rate limit hits")
-	fmt.Fprintln(w, "# TYPE gateway_rate_limit_hits_total counter")
+	_, _ = fmt.Fprintln(w, "# HELP gateway_rate_limit_hits_total Total number of rate limit hits")
+	_, _ = fmt.Fprintln(w, "# TYPE gateway_rate_limit_hits_total counter")
 	for key, counter := range m.rateLimitHits {
-		fmt.Fprintf(w, "gateway_rate_limit_hits_total{key=\"%s\"} %d\n", key, counter.Load())
+		_, _ = fmt.Fprintf(w, "gateway_rate_limit_hits_total{key=\"%s\"} %d\n", key, counter.Load())
 	}
 
 	// Write API key request counters
-	fmt.Fprintln(w, "# HELP gateway_api_key_requests_total Total requests per API key")
-	fmt.Fprintln(w, "# TYPE gateway_api_key_requests_total counter")
+	_, _ = fmt.Fprintln(w, "# HELP gateway_api_key_requests_total Total requests per API key")
+	_, _ = fmt.Fprintln(w, "# TYPE gateway_api_key_requests_total counter")
 	for key, counter := range m.apiKeyRequests {
-		fmt.Fprintf(w, "gateway_api_key_requests_total{key=\"%s\"} %d\n", key, counter.Load())
+		_, _ = fmt.Fprintf(w, "gateway_api_key_requests_total{key=\"%s\"} %d\n", key, counter.Load())
 	}
 
 	// Write upstream health
-	fmt.Fprintln(w, "# HELP gateway_upstream_healthy Whether upstream is healthy")
-	fmt.Fprintln(w, "# TYPE gateway_upstream_healthy gauge")
+	_, _ = fmt.Fprintln(w, "# HELP gateway_upstream_healthy Whether upstream is healthy")
+	_, _ = fmt.Fprintln(w, "# TYPE gateway_upstream_healthy gauge")
 	for key, gauge := range m.upstreamHealth {
-		fmt.Fprintf(w, "gateway_upstream_healthy{key=\"%s\"} %d\n", key, gauge.Load())
+		_, _ = fmt.Fprintf(w, "gateway_upstream_healthy{key=\"%s\"} %d\n", key, gauge.Load())
 	}
 
 	// Write in-flight requests
-	fmt.Fprintln(w, "# HELP gateway_requests_in_flight Number of requests in flight")
-	fmt.Fprintln(w, "# TYPE gateway_requests_in_flight gauge")
+	_, _ = fmt.Fprintln(w, "# HELP gateway_requests_in_flight Number of requests in flight")
+	_, _ = fmt.Fprintln(w, "# TYPE gateway_requests_in_flight gauge")
 	for key, gauge := range m.requestsInFlight {
-		fmt.Fprintf(w, "gateway_requests_in_flight{key=\"%s\"} %d\n", key, gauge.Load())
+		_, _ = fmt.Fprintf(w, "gateway_requests_in_flight{key=\"%s\"} %d\n", key, gauge.Load())
 	}
 
 	// Write request duration histogram
-	fmt.Fprintln(w, "# HELP gateway_request_duration_seconds Request duration in seconds")
-	fmt.Fprintln(w, "# TYPE gateway_request_duration_seconds histogram")
+	_, _ = fmt.Fprintln(w, "# HELP gateway_request_duration_seconds Request duration in seconds")
+	_, _ = fmt.Fprintln(w, "# TYPE gateway_request_duration_seconds histogram")
 	for key, hist := range m.requestDuration {
 		var cumulative int64
 		for i, bucket := range hist.buckets {
 			cumulative += hist.counts[i].Load()
-			fmt.Fprintf(w, "gateway_request_duration_seconds_bucket{key=\"%s\",le=\"%v\"} %d\n",
+			_, _ = fmt.Fprintf(w, "gateway_request_duration_seconds_bucket{key=\"%s\",le=\"%v\"} %d\n",
 				key, bucket, cumulative)
 		}
 		cumulative += hist.counts[len(hist.buckets)].Load()
-		fmt.Fprintf(w, "gateway_request_duration_seconds_bucket{key=\"%s\",le=\"+Inf\"} %d\n", key, cumulative)
-		fmt.Fprintf(w, "gateway_request_duration_seconds_sum{key=\"%s\"} %f\n", key, float64(hist.sum.Load())/1e6)
-		fmt.Fprintf(w, "gateway_request_duration_seconds_count{key=\"%s\"} %d\n", key, hist.count.Load())
+		_, _ = fmt.Fprintf(w, "gateway_request_duration_seconds_bucket{key=\"%s\",le=\"+Inf\"} %d\n", key, cumulative)
+		_, _ = fmt.Fprintf(w, "gateway_request_duration_seconds_sum{key=\"%s\"} %f\n", key, float64(hist.sum.Load())/1e6)
+		_, _ = fmt.Fprintf(w, "gateway_request_duration_seconds_count{key=\"%s\"} %d\n", key, hist.count.Load())
 	}
 }
 
